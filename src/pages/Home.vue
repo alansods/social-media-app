@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import firebase from '@/services/firebaseConnection'
+import firebase from '@/services/firebaseConnection';
 
 export default {
   name: "Home",
@@ -34,9 +34,9 @@ export default {
     return {
       input: "",
       user: {},
-    };
+    }
   },
-  create() {
+  created() {
     const user = localStorage.getItem("SocialApp");
     this.user = JSON.parse(user);
   },
@@ -46,8 +46,9 @@ export default {
         return;
       }
 
-      await firebase.firestore().collection("posts").add({
-        created: new Data(),
+      await firebase.firestore().collection("posts")
+      .add({
+        created: new Date(),
         content: this.input,
         autor: this.user.nome,
         userId: this.user.uid,
@@ -55,10 +56,10 @@ export default {
       })
       .then(()=> {
         this.input = '';
-        console.log('Post criado com sucesso.')
+        console.log('Post criado com sucesso.');
       })
       .catch((error)=> {
-        console.log('Post criado com sucesso.' + error)
+        console.log('Post criado com sucesso.' + error);
       })
 
     },
