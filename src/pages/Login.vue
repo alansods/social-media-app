@@ -2,7 +2,7 @@
   <div id="id">
     <div class="loginArea" v-if="login">
       <h1>Entrar</h1>
-      <form>
+      <form @submit.prevent="handleLogin">
         <input type="email" placeholder="Digite seu e-mail" v-model="email">
         <input type="password" placeholder="Digite sua senha" v-model="password">
         <button type="submit">Acessar</button>
@@ -56,7 +56,7 @@ export default {
           nome: this.nome
         };
 
-        await localStorage.setItem('usuarioSalvo', JSON.stringify(usuarioLogado))
+        await localStorage.setItem('SocialApp', JSON.stringify(usuarioLogado))
         
       })
       .catch(()=>{
@@ -64,6 +64,23 @@ export default {
       });
 
       this.$router.push('/')
+    },
+    async handleLogin() {
+      const { user } = await firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+
+      //buscar nome do usuário logado
+      const userProfile = await firebase.firestore().collection('users')
+      .doc(user.uid).get();
+
+      const usuarioLogado = {
+        uid: user.uid,
+        nome: userProfile.data().nome
+      };
+
+      await localStorage.setItem('SocialApp', JSON.stringify(usuarioLogado));
+
+      this.$router.push('/');
+
     }
   }
 };
