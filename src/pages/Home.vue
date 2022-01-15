@@ -12,13 +12,20 @@
       <button @click="createPost">Compartilhar</button>
     </div>
 
-    <div class="postarea">
-      <article class="post">
-        <h1>Alan</h1>
-        <p>Olá, este é meu primeiro post aqui.</p>
+    <div class="postarea loading" v-if="loading">
+      <h2>Buscando posts...</h2>
+    </div>
+
+    <div class="postarea" v-else>
+      <article class="post" v-for="post in posts" :key="post.id">
+        <h1>{{ post.autor }}</h1>
+        <p>{{ post.content | postLength }}</p>
         <div class="action-post">
-          <button>20 curtidas</button>
+          <button @click="likePost(post.id, post.likes)">
+            {{ post.likes === 0 ? "Curtir" : post.likes + " Curtidas" }}
+          </button>
           <button>Veja post completo</button>
+          <button>Deletar post</button>
         </div>
       </article>
     </div>
@@ -34,11 +41,33 @@ export default {
     return {
       input: "",
       user: {},
+      loading: true,
+      posts: [],
     }
   },
-  created() {
+  async created() {
     const user = localStorage.getItem("SocialApp");
     this.user = JSON.parse(user);
+
+    await firebase.firestore().collection('posts')
+    .orderBy('created', 'desc')
+    .onSnapshot((doc)=>{
+      this.posts = [];
+
+      doc.forEach((item)=>{
+        this.posts.push({
+          id: item.id,
+          autor: item.data().autor,
+          content: item.data().content,
+          likes: item.data().likes,
+          created: item.data().created,
+          userId: item.data().userId,
+        });
+      })
+
+      this.loading = false;
+    })
+
   },
   methods: {
     async createPost() {
@@ -61,9 +90,49 @@ export default {
       .catch((error)=> {
         console.log('Post criado com sucesso.' + error);
       })
-
     },
+    async likePost(id, likes){
+      const userId = this.user.uid;
+      const docId = `${userId}_${id}`;
+
+      //checando se post foi curtido
+
+      const doc = await firebase.firestore().collection('likes')
+      .doc(docId).get()
+
+      if(doc.exists){
+        await firebase.firestore().collection('posts')
+        .doc(id).update({
+          likes: likes - 1
+        })
+
+      await firebase.firestore().collection('likes')
+      .doc(docId).delete();
+      return;
+      }
+
+      await firebase.firestore().collection('likes')
+      .doc(docId).set({
+        postId: id,
+        userId: userId,
+      })
+
+      //criar like
+      await firebase.firestore().collection('posts')
+      .doc(id).update({
+        likes: likes + 1
+      })
+
+    }
   },
+  filters: {
+    postLength(valor){
+      if(valor.length < 200) {
+        return valor;
+      }
+      return `${valor.substring(0,200)}...`
+    }
+  }
 };
 </script>
 
