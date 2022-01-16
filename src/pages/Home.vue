@@ -24,25 +24,31 @@
           <button @click="likePost(post.id, post.likes)">
             {{ post.likes === 0 ? "Curtir" : post.likes + " Curtidas" }}
           </button>
-          <button>Veja post completo</button>
+          <button @click="togglePostModal(post)">Veja post completo</button>
           <button>Deletar post</button>
         </div>
       </article>
     </div>
+
+    <Modal v-if="showPostModal" :post="fullPost" @close="togglePostModal" />
+
   </div>
 </template>
 
 <script>
 import firebase from '@/services/firebaseConnection';
+import Modal from '@/components/Modal';
 
 export default {
   name: "Home",
+  components: {Modal},
   data() {
     return {
       input: "",
       user: {},
       loading: true,
       posts: [],
+      showPostModal: false
     }
   },
   async created() {
@@ -82,6 +88,8 @@ export default {
         autor: this.user.nome,
         userId: this.user.uid,
         likes: 0,
+        showPostModal: false,
+        fullPost: {}
       })
       .then(()=> {
         this.input = '';
@@ -123,6 +131,16 @@ export default {
         likes: likes + 1
       })
 
+    },
+
+    togglePostModal(post){
+      this.showPostModal = !this.showPostModal;
+
+      if(this.showPostModal){
+        this.fullPost = post;
+      }else{
+        this.fullPost = {};
+      }
     }
   },
   filters: {
