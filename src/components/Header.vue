@@ -1,7 +1,7 @@
 <template>
   <header id="header">
     <router-link to="/">Social Media App</router-link>
-    <router-link tag="button" to="/dashboard">Dashboard</router-link>
+    <router-link tag="button" to="/dashboard">Minha Conta</router-link>
   </header>
 </template>
 
